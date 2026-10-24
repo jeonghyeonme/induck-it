@@ -38,7 +38,7 @@ async def chat(request: ChatRequest):
 
     try:
         llm = ChatGoogleGenerativeAI(
-            model="gemini-2.5-flash",
+            model="gemini-3.8-flash",
             google_api_key=settings.GEMINI_API_KEY,
             temperature=0.7,
         ).bind_tools(tools)
