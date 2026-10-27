@@ -185,7 +185,10 @@ export default function ChatPage() {
   /* 일반 텍스트 내의 마크다운 개행 및 글자 강조 문법을 안전하게 가공 */
   const renderFormattedContent = (content: string) => {
     return content.split('\n').map((line, lineIdx) => {
-      let renderedLine = line;
+      /* 불릿 기호는 먼저 떼어내고, 링크 전체를 감싼 볼드(**[제목](URL)**)는 링크만 남김 */
+      const isBullet = /^\s*[-*] /.test(line);
+      const renderedLine = (isBullet ? line.replace(/^\s*[-*] /, '') : line)
+        .replace(/\*\*(\[[^\]]*\]\([^)]*\))\*\*/g, '$1');
       
       /* ### 소제목 처리 */
       if (renderedLine.startsWith('### ')) {
@@ -225,7 +228,7 @@ export default function ChatPage() {
       
       // 볼드체 찾기 (링크와 겹치지 않는 경우만)
       while ((match = boldRegex.exec(renderedLine)) !== null) {
-        if (!combinedMatches.some(m => (match!.index >= m.index && match!.index < m.index + m.length))) {
+        if (!combinedMatches.some(m => match!.index < m.index + m.length && m.index < match!.index + match![0].length)) {
           combinedMatches.push({
             index: match.index,
             length: match[0].length,
@@ -253,11 +256,10 @@ export default function ChatPage() {
       const finalLine = parts.length > 0 ? parts : renderedLine;
 
       /* 리스트 불릿 처리 */
-      if (line.trim().startsWith('* ') || line.trim().startsWith('- ')) {
-        const cleanLine = line.trim().substring(2);
+      if (isBullet) {
         return (
           <ul key={lineIdx} className="list-disc pl-4 text-sm my-0.5">
-            <li>{finalLine === line ? cleanLine : finalLine}</li>
+            <li>{finalLine}</li>
           </ul>
         );
       }
